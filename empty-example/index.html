@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>p5.js example</title>
+    <style>
+      body {
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+    <script src="../p5.js"></script>
+    <script src="./matter.js"></script>
+    <script src="./box.js"></script>
+    <script src="./boundary.js"></script>
+    <script src="./particles.js"></script>
+  </head>
+
+  <body>
+    <main>
+      <h1>
+        Hello MATTER.JS! I am Carl and I will be your programmer for today!
+      </h1>
+    </main>
+    <script>
+      var Engine = Matter.Engine,
+        Render = Matter.Render,
+        Runner = Matter.Runner,
+        Bodies = Matter.Bodies,
+        Composite = Matter.Composite,
+        Constraint = Matter.Constraint,
+        Mouse = Matter.Mouse,
+        MouseConstraint = Matter.MouseConstraint;
+
+      var engine;
+      var circles = [];
+      var runner;
+      var world;
+      var ground;
+      var boundaries = [];
+      var particles = [];
+      var mConstraint;
+
+      function setup() {
+        var canvas = createCanvas(400, 400);
+        engine = Engine.create();
+        runner = Runner.create();
+        world = engine.world;
+        Runner.run(engine);
+
+        var prev = null;
+
+        for (var x = 200; x < 400; x += 10) {
+          var fixed = false;
+          if (!prev) {
+            fixed = true;
+          }
+
+          var p = new Particle(x, 100, 10, fixed);
+          // var p2 = new Particle(200, 150, 10);
+          particles.push(p);
+          // particles.push(p2);
+
+          if (prev) {
+            var options = {
+              bodyA: p.body,
+              bodyB: prev.body,
+              length: 20,
+              stiffness: 0.4,
+            };
+
+            var constraint = Constraint.create(options);
+
+            Composite.add(world, constraint);
+          }
+
+          prev = p;
+        }
+
+        boundaries.push(new Boundary(200, height, 500, 100));
+
+        var canvasmouse = Mouse.create(canvas.elt);
+        canvasmouse.pixelRatio = pixelDensity();
+        var options = {
+          mouse: canvasmouse
+        };
+
+        mConstraint = MouseConstraint.create(engine, options);
+        
+
+        Composite.add(world, mConstraint);
+      }
+
+      // function mouseDragged() {
+      //   circles.push(new Circle(mouseX, mouseY, random(5, 10)));
+      // }
+
+      //World (capital W) is deprecated, Composite is the new syntax
+      //Engine (capital E) is deprecated, Runner is the new syntax
+      function draw() {
+        background(51);
+        Engine.update(engine);
+        for (var i = 0; i < boundaries.length; i++) {
+          boundaries[i].show();
+        }
+
+        for (var i = 0; i < particles.length; i++) {
+          particles[i].show();
+        }
+
+        // line(
+        //   particles[0].body.position.x,
+        //   particles[0].body.position.y,
+        //   particles[1].body.position.x,
+        //   particles[1].body.position.y
+        // );
+
+        if (mConstraint.body) {
+          var pos = mConstraint.body.position;
+          var offset = mConstraint.constraint.pointB;
+          var m = mConstraint.mouse.position;
+
+          stroke(0,255,0);
+          line(pos.x + offset.x, pos.y + offset.y, m.x, m.y);
+        }
+      }
+    </script>
+  </body>
+</html>
